@@ -151,6 +151,63 @@ select{padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--bor
 .ann-legend{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;margin-top:8px;}
 .ann-item{display:flex;align-items:center;gap:3px;}
 
+/* DEEP REVIEW PANEL */
+#deep-review-panel{display:none;margin-bottom:10px;}
+#deep-review-panel.show{display:block;}
+.dr-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.dr-title{font-size:14px;font-weight:700;color:var(--accent);}
+.dr-progress-wrap{margin-bottom:10px;}
+.dr-progress-bar-outer{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:4px;}
+.dr-progress-bar-inner{height:100%;background:var(--accent);border-radius:3px;transition:width .3s;}
+.dr-progress-lbl{font-size:11px;color:var(--text2);}
+
+/* ACCURACY SCORES */
+.dr-accuracy{display:flex;gap:6px;margin-bottom:10px;}
+.dr-acc-box{flex:1;border-radius:var(--radius-sm);padding:10px 6px;text-align:center;border:1px solid var(--border);}
+.dr-acc-color{font-size:11px;color:var(--text2);margin-bottom:3px;}
+.dr-acc-val{font-size:24px;font-weight:700;}
+.dr-acc-lbl{font-size:10px;color:var(--text2);margin-top:1px;}
+
+/* SUMMARY CHIPS */
+.dr-summary{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.dr-chip{display:flex;align-items:center;gap:4px;padding:5px 9px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid transparent;}
+.chip-brilliant{background:#1a472a;color:#4ade80;border-color:#166534;}
+.chip-great{background:#1e3a5f;color:#60a5fa;border-color:#1d4ed8;}
+.chip-best{background:#14532d;color:#86efac;border-color:#15803d;}
+.chip-excellent{background:#1a3c1a;color:#a3e635;border-color:#3f6212;}
+.chip-good{background:#333;color:#aaa;border-color:#555;}
+.chip-inaccuracy{background:#7c4a00;color:#fcd34d;border-color:#92400e;}
+.chip-mistake{background:#7c2d12;color:#fb923c;border-color:#9a3412;}
+.chip-blunder{background:#5c0a0a;color:#f87171;border-color:#991b1b;}
+
+/* EVAL GRAPH INTERACTIVE */
+#dr-graph-canvas{width:100%;height:80px;border-radius:8px;display:block;cursor:pointer;margin-bottom:8px;}
+.dr-graph-wrap{position:relative;}
+.dr-graph-tooltip{position:absolute;top:-30px;background:#1a1814;color:#fff;padding:3px 8px;border-radius:6px;font-size:11px;pointer-events:none;opacity:0;transition:opacity .15s;white-space:nowrap;z-index:10;}
+
+/* MOVE LIST IN REVIEW */
+.dr-move-list{max-height:140px;overflow-y:auto;margin-bottom:8px;}
+.dr-move-row{display:flex;align-items:center;padding:4px 6px;border-radius:6px;cursor:pointer;transition:background .1s;gap:5px;}
+.dr-move-row:hover{background:var(--surface2);}
+.dr-move-row.active{background:var(--accent);color:#fff;}
+.dr-move-row.active .dr-move-ann{filter:brightness(1.5);}
+.dr-move-num{font-size:11px;color:var(--text3);min-width:22px;font-family:'JetBrains Mono',monospace;}
+.dr-move-san{font-size:13px;font-weight:500;font-family:'JetBrains Mono',monospace;flex:1;}
+.dr-move-ann{font-size:13px;min-width:18px;text-align:center;}
+.dr-move-eval{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;min-width:36px;text-align:right;}
+
+/* MOVE DETAIL */
+.dr-detail{background:var(--surface2);border-radius:var(--radius-sm);padding:10px;margin-bottom:8px;min-height:56px;}
+.dr-detail-head{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.dr-detail-ann{font-size:22px;}
+.dr-detail-label{font-size:14px;font-weight:600;}
+.dr-detail-body{font-size:12px;color:var(--text2);line-height:1.5;}
+.dr-best-move{margin-top:6px;font-size:12px;}
+.dr-best-move span{color:var(--accent);font-weight:600;font-family:'JetBrains Mono',monospace;}
+
+/* BOARD ANNOTATION ARROWS */
+.ann-badge{position:absolute;bottom:1px;left:1px;font-size:11px;line-height:1;pointer-events:none;z-index:2;text-shadow:0 0 4px rgba(0,0,0,0.8);}
+
 /* ONLINE PANEL */
 #mp-panel{display:none;}
 #mp-panel.show{display:block;}
@@ -367,26 +424,77 @@ body.theme-purple{--light-sq:#d4b8e0;--dark-sq:#7c5a9e;--accent:#6c3483;--accent
   </div>
 </div>
 
-<!-- REVIEW BAR -->
-<div id="review-bar" class="card" style="padding:12px 13px;">
-  <div class="rev-header">
-    <span class="rev-title">🔍 סקירת משחק</span>
+<!-- DEEP REVIEW PANEL -->
+<div id="deep-review-panel" class="card" style="padding:12px 13px;">
+  <div class="dr-header">
+    <span class="dr-title">🔍 ניתוח משחק</span>
     <button class="icon-btn" onclick="exitReview()">✕ סגור</button>
   </div>
-  <div class="rev-controls">
+
+  <!-- analysis progress -->
+  <div class="dr-progress-wrap" id="dr-progress-wrap">
+    <div class="dr-progress-lbl" id="dr-progress-lbl">מנתח מהלכים...</div>
+    <div class="dr-progress-bar-outer"><div class="dr-progress-bar-inner" id="dr-progress-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- accuracy -->
+  <div class="dr-accuracy" id="dr-accuracy" style="display:none;">
+    <div class="dr-acc-box">
+      <div class="dr-acc-color">⬜ לבן</div>
+      <div class="dr-acc-val" id="dr-acc-white" style="color:var(--good)">—</div>
+      <div class="dr-acc-lbl">דיוק</div>
+    </div>
+    <div class="dr-acc-box">
+      <div class="dr-acc-color">⬛ שחור</div>
+      <div class="dr-acc-val" id="dr-acc-black" style="color:var(--good)">—</div>
+      <div class="dr-acc-lbl">דיוק</div>
+    </div>
+  </div>
+
+  <!-- summary chips -->
+  <div class="dr-summary" id="dr-summary" style="display:none;"></div>
+
+  <!-- eval graph -->
+  <div class="dr-graph-wrap" id="dr-graph-wrap" style="display:none;">
+    <div class="dr-graph-tooltip" id="dr-graph-tooltip"></div>
+    <canvas id="dr-graph-canvas" height="80"></canvas>
+  </div>
+
+  <!-- move detail box -->
+  <div class="dr-detail" id="dr-detail" style="display:none;">
+    <div class="dr-detail-head">
+      <span class="dr-detail-ann" id="dr-detail-ann">—</span>
+      <span class="dr-detail-label" id="dr-detail-label">בחר מהלך</span>
+    </div>
+    <div class="dr-detail-body" id="dr-detail-body"></div>
+    <div class="dr-best-move" id="dr-best-move-row" style="display:none;">
+      המהלך הטוב: <span id="dr-best-move"></span>
+    </div>
+  </div>
+
+  <!-- nav controls -->
+  <div class="rev-controls" id="dr-nav" style="display:none;">
     <button class="rev-btn" onclick="reviewGo(0)" id="rev-first">⏮</button>
     <button class="rev-btn" onclick="reviewStep(-1)" id="rev-prev">◀</button>
     <span class="rev-counter" id="rev-counter">0 / 0</span>
     <button class="rev-btn" onclick="reviewStep(1)" id="rev-next">▶</button>
     <button class="rev-btn" onclick="reviewGo(9999)" id="rev-last">⏭</button>
   </div>
-  <div class="rev-move-lbl" id="rev-move-lbl"></div>
-  <div class="ann-legend">
-    <span class="ann-item">🟩 מעולה</span>
-    <span class="ann-item">✅ טוב</span>
-    <span class="ann-item">⚠️ טעות</span>
-    <span class="ann-item">❌ ביש</span>
+
+  <!-- move list -->
+  <div class="dr-move-list" id="dr-move-list" style="display:none;"></div>
+</div>
+
+<!-- LEGACY REVIEW BAR (hidden, kept for compat) -->
+<div id="review-bar" class="card" style="display:none!important;padding:12px 13px;">
+  <div class="rev-controls">
+    <button class="rev-btn" id="rev-first2">⏮</button>
+    <button class="rev-btn" id="rev-prev2">◀</button>
+    <span class="rev-counter" id="rev-counter2">0 / 0</span>
+    <button class="rev-btn" id="rev-next2">▶</button>
+    <button class="rev-btn" id="rev-last2">⏭</button>
   </div>
+  <div id="rev-move-lbl"></div>
 </div>
 
 <!-- BOTTOM CARD -->
@@ -623,20 +731,395 @@ function drawGraph(){
   ctx.stroke();
 }
 
-// ── REVIEW ───────────────────────────────────────────────────
+// ── DEEP REVIEW SYSTEM ────────────────────────────────────────
+// Classification thresholds (centipawn loss from best move)
+const CLASS = [
+  {name:'Brilliant', emoji:'⭐', cls:'chip-brilliant', minLoss:-Infinity, maxLoss:-50, color:'#4ade80'},  // better than engine!
+  {name:'Best',      emoji:'✅', cls:'chip-best',      minLoss:-50,       maxLoss:10,  color:'#86efac'},
+  {name:'Excellent', emoji:'!',  cls:'chip-excellent', minLoss:10,        maxLoss:30,  color:'#a3e635'},
+  {name:'Good',      emoji:'',   cls:'chip-good',      minLoss:30,        maxLoss:60,  color:'#aaa'},
+  {name:'Inaccuracy',emoji:'?!', cls:'chip-inaccuracy',minLoss:60,        maxLoss:100, color:'#fcd34d'},
+  {name:'Mistake',   emoji:'?',  cls:'chip-mistake',   minLoss:100,       maxLoss:200, color:'#fb923c'},
+  {name:'Blunder',   emoji:'??', cls:'chip-blunder',   minLoss:200,       maxLoss:Infinity, color:'#f87171'},
+];
+const CLASS_HEB = {
+  'Brilliant':'מהלך מבריק','Best':'המהלך הטוב ביותר','Excellent':'מצוין',
+  'Good':'טוב','Inaccuracy':'אי-דיוק','Mistake':'טעות','Blunder':'ביש'
+};
+
+let drAnalysis = []; // per-move analysis results: {san, color, bestMove, bestEval, playedEval, cpLoss, classIdx, fen, from, to}
+let drAnalyzing = false;
+let drWorkers = []; // pool of stockfish workers for analysis
+
+function classifyMove(cpLoss, color){
+  for(let i=0;i<CLASS.length;i++){
+    if(cpLoss>=CLASS[i].minLoss && cpLoss<CLASS[i].maxLoss) return i;
+  }
+  return 5; // mistake fallback
+}
+
+// Queue-based deep analysis
+let _analyzeQueue = [];
+let _analyzeWorkerFree = true;
+let _analyzeWorkerRef = null;
+
 function enterReview(){
   if(!moveHist.length)return;
-  reviewMode=true;revMoves=moveHist.slice();revFens=[];revAnns=[];
+  reviewMode=true;revMoves=moveHist.slice();revFens=[];revAnns=[];drAnalysis=[];
   const tmp=new Chess();revFens.push(tmp.fen());
   for(const m of revMoves){tmp.move({from:m.from,to:m.to,promotion:m.promotion||'q'});revFens.push(tmp.fen());}
   revIdx=revFens.length-1;
-  // annotate moves via eval if available
-  annotateGame();
-  document.getElementById('review-bar').className='card show';
+
+  // Show panel
+  document.getElementById('deep-review-panel').className='card show';
+  document.getElementById('dr-progress-wrap').style.display='block';
+  document.getElementById('dr-accuracy').style.display='none';
+  document.getElementById('dr-summary').style.display='none';
+  document.getElementById('dr-graph-wrap').style.display='none';
+  document.getElementById('dr-detail').style.display='none';
+  document.getElementById('dr-nav').style.display='none';
+  document.getElementById('dr-move-list').style.display='none';
+  document.getElementById('dr-progress-bar').style.width='0%';
+  document.getElementById('dr-progress-lbl').textContent='מנתח מהלכים... (0/'+revMoves.length+')';
+
+  renderReview();
+  startDeepAnalysis();
+}
+
+function startDeepAnalysis(){
+  if(drAnalyzing)return;
+  drAnalyzing=true;
+  drAnalysis=new Array(revMoves.length).fill(null);
+  _analyzeQueue=[];
+
+  // Build queue: for each move, we need eval BEFORE move (to get bestMove+bestEval) and AFTER
+  // We'll analyze each position before the move at depth 14
+  for(let i=0;i<revMoves.length;i++){
+    _analyzeQueue.push({idx:i, fen:revFens[i], fenAfter:revFens[i+1], move:revMoves[i]});
+  }
+  _analyzeWorkerFree=true;
+  _processNextAnalysis();
+}
+
+function _processNextAnalysis(){
+  if(!_analyzeQueue.length){
+    drAnalyzing=false;
+    _finishAnalysis();
+    return;
+  }
+  const task=_analyzeQueue.shift();
+  const done=revMoves.length-_analyzeQueue.length;
+  const total=revMoves.length;
+  document.getElementById('dr-progress-bar').style.width=(done/total*100)+'%';
+  document.getElementById('dr-progress-lbl').textContent='מנתח מהלכים... ('+done+'/'+total+')';
+
+  // Use sfEvalWorker for sequential analysis
+  if(!sfEvalWorker){
+    // fallback: no analysis possible
+    drAnalysis[task.idx]={
+      san:task.move.san,color:task.move.color,
+      bestMove:null,bestEval:0,playedEval:0,cpLoss:0,classIdx:3,
+      fen:task.fen,from:task.move.from,to:task.move.to
+    };
+    setTimeout(_processNextAnalysis,0);
+    return;
+  }
+
+  let bestMove=null, bestEval=null, playedEval=null;
+  let phase=0; // 0=analyzing before, 1=analyzing after
+
+  const origHandler=sfEvalWorker.onmessage;
+
+  function handleMsg(e){
+    const l=e.data;
+    if(phase===0){
+      // before move: get best move and eval
+      if(l.startsWith('info')&&l.includes('pv')&&l.includes('depth 14')){
+        if(l.includes('score cp')){const m=l.match(/score cp (-?\d+)/);if(m)bestEval=parseInt(m[1]);}
+        if(l.includes('score mate')){const m=l.match(/score mate (-?\d+)/);if(m)bestEval=parseInt(m[1])>0?9900:-9900;}
+        const pvM=l.match(/ pv ([a-h][1-8][a-h][1-8][qrbn]?)/);if(pvM)bestMove=pvM[1];
+      }
+      if(l.startsWith('bestmove')){
+        const bm=l.split(' ')[1];if(bm&&bm!=='(none)'&&!bestMove)bestMove=bm;
+        // now analyze position AFTER the move
+        phase=1;
+        sfEvalWorker.postMessage('position fen '+task.fenAfter);
+        sfEvalWorker.postMessage('go depth 14');
+      }
+    } else {
+      // after move
+      if(l.startsWith('info')&&l.includes('depth 14')){
+        if(l.includes('score cp')){const m=l.match(/score cp (-?\d+)/);if(m)playedEval=parseInt(m[1]);}
+        if(l.includes('score mate')){const m=l.match(/score mate (-?\d+)/);if(m)playedEval=parseInt(m[1])>0?9900:-9900;}
+      }
+      if(l.startsWith('bestmove')){
+        sfEvalWorker.onmessage=origHandler;
+        // Convert evals to white's perspective
+        const wBest = task.move.color==='w' ? (bestEval??0) : -(bestEval??0);
+        const wPlayed = task.move.color==='w' ? (playedEval??0) : -(playedEval??0);
+        // cpLoss = how much worse the played move is vs best (from the player's perspective)
+        // From white perspective: after best = wBest (white to move, so higher=better for white)
+        // We need: cpLoss = bestEval_for_side - playedEval_for_side
+        // eval before move (for the side to move) = if white's turn, bestEval; if black's turn, -bestEval
+        const sideSign = task.move.color==='w' ? 1 : -1;
+        const evalBefore = sideSign*(bestEval??0);   // eval of best move from side's view
+        const evalAfter  = sideSign*(playedEval??0); // eval after played move from side's view
+        // cpLoss from best: how much less the played move scored vs best
+        // best = evalBefore (engine's best continuation from this pos, in side's favor)
+        // played = evalAfter negated (after the move it's opponent's turn, so flip)
+        // Standard: cpLoss = bestEval_before - (-evalAfter_for_opponent)
+        // Simpler: cpLoss = evalBefore - (-evalAfter) = evalBefore + evalAfter (opponent now has evalAfter advantage)
+        // Actually: bestMoveScore = evalBefore (from side's perspective before move)
+        //            playedMoveScore = -evalAfter (from side's perspective: after move, opp has evalAfter, so side has -evalAfter)
+        // wait let me use a cleaner formula:
+        // playedCP = -(sideSign * (playedEval??0)) = from side's perspective after the move (flip because now opponent to move)
+        // bestCP from engine = evalBefore (sideSign * bestEval)
+        // NO: bestEval is score for side to move BEFORE the move. After best move: opponent faces -bestEval.
+        // Let's just use: cpLoss = max(0, evalBefore - playedCP)
+        // where playedCP = -(sideSign*(playedEval??0)) because it's now opp's turn
+        const bestCP  = sideSign*(bestEval??0);
+        const playedCP= -(sideSign*(playedEval??0));
+        const cpLoss  = Math.max(-200, bestCP - playedCP);
+        const classIdx= classifyMove(cpLoss, task.move.color);
+        // Brilliant: played something engine wouldn't (cpLoss <= -50, sacrifice etc)
+        drAnalysis[task.idx]={
+          san:task.move.san, color:task.move.color,
+          bestMove, bestEval:bestEval??0, playedEval:playedEval??0,
+          cpLoss, classIdx,
+          fen:task.fen, from:task.move.from, to:task.move.to,
+          evalAfterW: wPlayed // white-perspective eval after move
+        };
+        setTimeout(_processNextAnalysis,10);
+      }
+    }
+  }
+
+  sfEvalWorker.onmessage=handleMsg;
+  sfEvalWorker.postMessage('position fen '+task.fen);
+  sfEvalWorker.postMessage('go depth 14');
+}
+
+function _finishAnalysis(){
+  document.getElementById('dr-progress-wrap').style.display='none';
+  document.getElementById('dr-accuracy').style.display='flex';
+  document.getElementById('dr-summary').style.display='flex';
+  document.getElementById('dr-graph-wrap').style.display='block';
+  document.getElementById('dr-detail').style.display='block';
+  document.getElementById('dr-nav').style.display='flex';
+  document.getElementById('dr-move-list').style.display='block';
+
+  // Also update legacy evalHist for graph
+  evalHist=drAnalysis.filter(Boolean).map(a=>a.evalAfterW/100);
+
+  _renderAccuracy();
+  _renderSummaryChips();
+  _renderDrGraph();
+  _renderDrMoveList();
+  _updateDrDetail(revIdx-1);
   renderReview();
 }
-function exitReview(){reviewMode=false;document.getElementById('review-bar').className='card';render();renderHistory();}
-function reviewGo(n){revIdx=Math.max(0,Math.min(revFens.length-1,n===9999?revFens.length-1:n));renderReview();}
+
+function _renderAccuracy(){
+  const counts={w:{total:0,sum:0},b:{total:0,sum:0}};
+  for(const a of drAnalysis){
+    if(!a)continue;
+    const side=a.color==='w'?'w':'b';
+    counts[side].total++;
+    // accuracy formula similar to chess.com: accuracy = 100 * (2/(1+exp(cpLoss/300)) - 1) mapped to 0-100
+    const acc=Math.max(0,Math.min(100, 100*(2/(1+Math.exp(Math.max(0,a.cpLoss)/300))-1) ));
+    counts[side].sum+=acc;
+  }
+  const wAcc=counts.w.total?Math.round(counts.w.sum/counts.w.total):0;
+  const bAcc=counts.b.total?Math.round(counts.b.sum/counts.b.total):0;
+  const color=v=>v>=80?'var(--good)':v>=60?'var(--warn)':'var(--danger)';
+  document.getElementById('dr-acc-white').textContent=wAcc+'%';
+  document.getElementById('dr-acc-white').style.color=color(wAcc);
+  document.getElementById('dr-acc-black').textContent=bAcc+'%';
+  document.getElementById('dr-acc-black').style.color=color(bAcc);
+}
+
+function _renderSummaryChips(){
+  const counts=CLASS.map(()=>({w:0,b:0}));
+  for(const a of drAnalysis){if(!a)continue;counts[a.classIdx][a.color]++;}
+  const el=document.getElementById('dr-summary');el.innerHTML='';
+  CLASS.forEach((c,i)=>{
+    const tot=counts[i].w+counts[i].b;if(!tot)return;
+    const chip=document.createElement('span');
+    chip.className='dr-chip '+c.cls;
+    chip.textContent=(c.emoji?c.emoji+' ':'')+CLASS_HEB[c.name]+' × '+tot;
+    el.appendChild(chip);
+  });
+}
+
+function _renderDrGraph(){
+  const canvas=document.getElementById('dr-graph-canvas');
+  const tooltip=document.getElementById('dr-graph-tooltip');
+  canvas.width=canvas.offsetWidth*devicePixelRatio||600;
+  canvas.height=80*devicePixelRatio;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(devicePixelRatio,devicePixelRatio);
+  const W=canvas.offsetWidth||600,H=80;
+  _drawDrGraph(ctx,W,H);
+
+  canvas.onmousemove=canvas.ontouchmove=(ev)=>{
+    const rect=canvas.getBoundingClientRect();
+    const cx=(ev.touches?ev.touches[0].clientX:ev.clientX)-rect.left;
+    const n=drAnalysis.length;if(!n)return;
+    const idx=Math.round(cx/W*(n-1));
+    const a=drAnalysis[Math.max(0,Math.min(n-1,idx))];
+    if(!a)return;
+    const x=idx/Math.max(n-1,1)*W;
+    tooltip.style.left=Math.min(x,W-80)+'px';
+    tooltip.style.opacity='1';
+    const v=a.evalAfterW/100;
+    tooltip.textContent=(idx+1)+'. '+a.san+' '+(v>=0?'+':'')+v.toFixed(1);
+  };
+  canvas.onmouseleave=canvas.ontouchend=()=>{tooltip.style.opacity='0';};
+  canvas.onclick=(ev)=>{
+    const rect=canvas.getBoundingClientRect();
+    const cx=ev.clientX-rect.left;
+    const n=drAnalysis.length;if(!n)return;
+    const idx=Math.round(cx/W*(n-1));
+    reviewGo(idx+1);
+  };
+}
+
+function _drawDrGraph(ctx,W,H){
+  ctx.clearRect(0,0,W,H);
+  // background
+  ctx.fillStyle='#2a2a2a';ctx.fillRect(0,0,W,H);
+  // center line
+  ctx.strokeStyle='#555';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+  ctx.setLineDash([]);
+  const n=drAnalysis.length;if(n<1)return;
+  const pts=drAnalysis.map((a,i)=>{
+    const v=a?Math.max(-10,Math.min(10,a.evalAfterW/100)):0;
+    const x=i/(Math.max(n-1,1))*W;
+    const y=H/2-v/10*(H/2-4);
+    return{x,y,v};
+  });
+  // fill white area
+  ctx.beginPath();ctx.moveTo(0,H/2);
+  pts.forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.lineTo(W,H/2);ctx.closePath();
+  const fillGrad=ctx.createLinearGradient(0,0,0,H);
+  fillGrad.addColorStop(0,'rgba(255,255,255,0.7)');
+  fillGrad.addColorStop(0.5,'rgba(255,255,255,0.1)');
+  fillGrad.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=fillGrad;ctx.fill();
+  // line
+  ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();
+  pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.stroke();
+  // current position marker
+  if(revIdx>0&&revIdx<=n){
+    const p=pts[revIdx-1];
+    ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
+    ctx.fillStyle='#4a90d9';ctx.fill();
+  }
+  // blunder/mistake dots
+  drAnalysis.forEach((a,i)=>{
+    if(!a)return;
+    const p=pts[i];
+    if(a.classIdx>=4){// inaccuracy+
+      const col=['#fcd34d','#fb923c','#f87171'][a.classIdx-4]||'#f87171';
+      ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);
+      ctx.fillStyle=col;ctx.fill();
+    }
+  });
+}
+
+function _renderDrMoveList(){
+  const el=document.getElementById('dr-move-list');el.innerHTML='';
+  for(let i=0;i<revMoves.length;i+=2){
+    const row=document.createElement('div');
+    row.style.display='flex';row.style.gap='3px';
+    const num=document.createElement('span');
+    num.className='dr-move-num';num.style.padding='4px 2px';num.textContent=(i/2+1)+'.';
+    row.appendChild(num);
+    // white move
+    row.appendChild(_makeDrMoveBtn(i));
+    // black move
+    if(i+1<revMoves.length) row.appendChild(_makeDrMoveBtn(i+1));
+    el.appendChild(row);
+  }
+}
+
+function _makeDrMoveBtn(i){
+  const a=drAnalysis[i];
+  const m=revMoves[i];
+  const btn=document.createElement('div');
+  btn.className='dr-move-row'+(revIdx===i+1?' active':'');
+  btn.id='dr-mv-'+i;
+  const annEl=document.createElement('span');annEl.className='dr-move-ann';
+  annEl.textContent=a?CLASS[a.classIdx].emoji:'';
+  const sanEl=document.createElement('span');sanEl.className='dr-move-san';sanEl.textContent=m.san;
+  const evalEl=document.createElement('span');evalEl.className='dr-move-eval';
+  if(a){const v=a.evalAfterW/100;evalEl.textContent=(v>=0?'+':'')+v.toFixed(1);}
+  btn.appendChild(annEl);btn.appendChild(sanEl);btn.appendChild(evalEl);
+  btn.onclick=()=>reviewGo(i+1);
+  return btn;
+}
+
+function _updateDrDetail(moveIdx){
+  const el=document.getElementById('dr-detail');
+  if(moveIdx<0||moveIdx>=drAnalysis.length){
+    el.style.display='none';return;
+  }
+  el.style.display='block';
+  const a=drAnalysis[moveIdx];
+  if(!a){document.getElementById('dr-detail-ann').textContent='';document.getElementById('dr-detail-label').textContent='';document.getElementById('dr-detail-body').textContent='';document.getElementById('dr-best-move-row').style.display='none';return;}
+  const c=CLASS[a.classIdx];
+  document.getElementById('dr-detail-ann').textContent=c.emoji;
+  document.getElementById('dr-detail-ann').style.color=c.color;
+  document.getElementById('dr-detail-label').textContent=(a.color==='w'?'לבן':'שחור')+': '+a.san+' — '+CLASS_HEB[c.name];
+  document.getElementById('dr-detail-label').style.color=c.color;
+  const v=a.evalAfterW/100;
+  const loss=a.cpLoss;
+  let body=`הערכה לאחר המהלך: ${v>=0?'+':''}${v.toFixed(2)}`;
+  if(loss>0) body+=` | אבדן: ${loss.toFixed(0)} נקודת ענף`;
+  document.getElementById('dr-detail-body').textContent=body;
+  if(a.bestMove && a.classIdx>=2 && a.bestMove!==(a.from+a.to+(a.promotion||''))){
+    document.getElementById('dr-best-move-row').style.display='block';
+    document.getElementById('dr-best-move').textContent=_uciToSan(a.fen, a.bestMove);
+  } else {
+    document.getElementById('dr-best-move-row').style.display='none';
+  }
+  // update move list active
+  document.querySelectorAll('.dr-move-row').forEach(r=>r.classList.remove('active'));
+  const active=document.getElementById('dr-mv-'+moveIdx);
+  if(active){active.classList.add('active');active.scrollIntoView({block:'nearest'});}
+  // redraw graph
+  const canvas=document.getElementById('dr-graph-canvas');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth||600;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.scale(devicePixelRatio,devicePixelRatio);
+  _drawDrGraph(ctx,W,80);
+}
+
+function _uciToSan(fen, uci){
+  try{
+    const tmp=new Chess(fen);
+    const from=uci.slice(0,2),to=uci.slice(2,4),promo=uci[4]||'q';
+    const m=tmp.move({from,to,promotion:promo});
+    return m?m.san:uci;
+  }catch(e){return uci;}
+}
+
+function exitReview(){
+  reviewMode=false;
+  drAnalyzing=false;
+  document.getElementById('deep-review-panel').className='card';
+  render();renderHistory();
+}
+
+function reviewGo(n){
+  revIdx=Math.max(0,Math.min(revFens.length-1,n===9999?revFens.length-1:n));
+  renderReview();
+  _updateDrDetail(revIdx-1);
+}
 function reviewStep(d){reviewGo(revIdx+d);}
 
 // Touch swipe for review
@@ -650,16 +1133,10 @@ document.getElementById('board-wrap').addEventListener('touchend',e=>{
 },{passive:true});
 
 function annotateGame(){
-  // Simple annotation based on eval swings
+  // Legacy: kept for backward compat but not used in deep review
   revAnns=revMoves.map((_,i)=>{
-    if(evalHist.length<i+2)return'';
-    const before=evalHist[i]||0,after=evalHist[i+1]||0;
-    const delta=revMoves[i].color==='w'?after-before:before-after;
-    if(delta>1.5)return'🟩';
-    if(delta>0.3)return'✅';
-    if(delta<-2)return'❌';
-    if(delta<-0.8)return'⚠️';
-    return'';
+    const a=drAnalysis[i];if(!a)return'';
+    return CLASS[a.classIdx].emoji;
   });
 }
 
@@ -680,21 +1157,29 @@ function renderReview(){
     if(c===7){const rk=document.createElement('span');rk.className='coord rank';rk.textContent=flipped?r+1:8-r;sq.appendChild(rk);}
     boardEl.appendChild(sq);
   }
-  // annotation on "to" square
-  if(revIdx>0&&revAnns[revIdx-1]&&hlTo!==null){
-    const sqs=boardEl.querySelectorAll('.sq');
-    if(sqs[hlTo]){const a=document.createElement('span');a.className='ann';a.textContent=revAnns[revIdx-1];sqs[hlTo].appendChild(a);}
+  // annotation badge on "to" square
+  if(revIdx>0&&hlTo!==null){
+    const a=drAnalysis[revIdx-1];
+    if(a&&a.classIdx!==3){// skip "good" (empty emoji)
+      const sqs=boardEl.querySelectorAll('.sq');
+      if(sqs[hlTo]){
+        const badge=document.createElement('span');
+        badge.className='ann-badge';
+        badge.textContent=CLASS[a.classIdx].emoji;
+        sqs[hlTo].appendChild(badge);
+      }
+    }
   }
   document.getElementById('rev-counter').textContent=revIdx+' / '+(revFens.length-1);
   document.getElementById('rev-first').disabled=revIdx===0;
   document.getElementById('rev-prev').disabled=revIdx===0;
   document.getElementById('rev-next').disabled=revIdx===revFens.length-1;
   document.getElementById('rev-last').disabled=revIdx===revFens.length-1;
-  const lbl=revIdx>0&&revMoves[revIdx-1]?'מהלך '+revIdx+': '+revMoves[revIdx-1].san+(revAnns[revIdx-1]?' '+revAnns[revIdx-1]:''):'מצב התחלתי';
-  document.getElementById('rev-move-lbl').textContent=lbl;
-  renderHistory(revIdx-1);
   setStatus(revIdx>0?revMoves[revIdx-1].san:'התחלה');
+  renderHistory(revIdx-1);
 }
+
+
 
 // ── PUZZLES (Lichess API) ───────────────────────────────────
 let currentLichessPuzzle = null;
@@ -843,18 +1328,18 @@ function loadLichessPuzzle(pz) {
   // In Lichess puzzles, the FEN is the position BEFORE the last opponent move.
   // We need to play that first move, then let the user solve.
   chess = new Chess(pz.fen);
-  
+
   // The first move in solution is actually the opponent's move that sets up the puzzle
   // Then user must find all subsequent moves
   const allMoves = pz.moves;
-  
+
   // Play the first move (opponent's) automatically
   const firstMove = allMoves[0];
   const fm = chess.move({ from: firstMove.slice(0,2), to: firstMove.slice(2,4), promotion: firstMove[4] || undefined });
   if (fm) {
     lastMove = [si(fm.from), si(fm.to)];
   }
-  
+
   puzzleMoves = allMoves.slice(1); // remaining moves for user to find
   puzzleStep = 0;
   puzzleColor = chess.turn();
@@ -867,17 +1352,17 @@ function loadLichessPuzzle(pz) {
   const rating = pz.rating;
   const themes = pz.themes || [];
   const themeLabels = themes.slice(0,3).map(t => PUZZLE_THEMES[t] || t).join(' · ');
-  
+
   document.getElementById('puzzle-title').textContent = '🧩 פאזל #' + pz.id.slice(0,6);
   document.getElementById('puzzle-desc').textContent = (chess.turn() === 'w' ? '⬜ לבן' : '⬛ שחור') + ' לוחץ';
-  
+
   const ratingRow = document.getElementById('puzzle-rating-row');
   ratingRow.style.display = 'flex';
   document.getElementById('puzzle-rating-badge').textContent = '★ ' + rating;
   document.getElementById('puzzle-themes-row').textContent = themeLabels;
-  
+
   document.getElementById('puzzle-solution-btn').style.display = '';
-  
+
   // Progress bar
   const prog = document.getElementById('puzzle-progress');
   prog.style.display = 'block';
